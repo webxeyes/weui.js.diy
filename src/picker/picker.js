@@ -347,6 +347,181 @@ function picker() {
     _sington.hide = hide;
     return _sington;
 }
+//专门做一个datetimePicker
+
+function datetimePicker() {
+    if (_sington) return _sington;
+
+    // 配置项
+    const options = arguments[arguments.length - 1];
+    const defaults = $.extend({
+        id: 'default',
+        className: '',
+        container: 'body',
+        cols:5,//显示几列
+        //控制都显示哪些年
+        title: '',
+        desc: '',
+        onChange: $.noop,
+        onConfirm: $.noop,
+        onClose: $.noop
+    }, options);
+
+    //5列，年月日 时 分 秒（以后可以选择是否显示最后的）
+
+    let items;
+    items = [[],[],[],[],[],[]];
+    let _i;
+    for(_i=2020;_i<=2025;_i++)
+        items[0].push({label: _i + '年',value: _i});
+    for(_i=1;_i<=12;_i++)
+        items[1].push({label: _i + '月',value: _i});
+    for(_i=1;_i<=31;_i++)
+        items[2].push({label: _i + '日',value: _i});
+    for(_i=0;_i<=23;_i++)
+        items[3].push({label: _i + '点',value: _i});
+    for(_i=0;_i<=59;_i++)
+        items[4].push({label: _i + '分',value: _i});
+    for(_i=0;_i<=59;_i++)
+        items[5].push({label: _i + '秒',value: _i});
+
+    items.splice(defaults.cols);
+  
+ 
+    // 获取缓存
+    temp[defaults.id] = temp[defaults.id] || [];
+    const result = [];
+    const lineTemp = temp[defaults.id];
+    const $picker = $($.render(pickerTpl, defaults));
+    let depth = items.length , groups = '';
+    const scrollobjects=[];
+
+    // 显示与隐藏的方法
+    function show(){
+        $(defaults.container).append($picker);
+
+        // 这里获取一下计算后的样式，强制触发渲染. fix IOS10下闪现的问题
+        $.getStyle($picker[0], 'transform');
+
+        //更改标题
+        $picker.find('.weui-mask').addClass('weui-animate-fade-in');
+        $picker.find('.weui-picker').addClass('weui-animate-slide-up');
+    }
+    function _hide(callback){
+        _hide = $.noop; // 防止二次调用导致报错
+
+        $picker.find('.weui-mask').addClass('weui-animate-fade-out');
+        $picker.find('.weui-picker')
+            .addClass('weui-animate-slide-down')
+            .on('animationend webkitAnimationEnd', function () {
+                $picker.remove();
+                _sington = false;
+                defaults.onClose();
+                callback && callback();
+            });
+    }
+    function hide(callback){ _hide(callback); }
+
+    // 初始化滚动的方法
+    function scroll(items, level) {
+        //计算默认选项
+        if (lineTemp[level] === undefined && defaults.defaultValue && defaults.defaultValue[level] !== undefined) {
+            // 没有缓存选项，而且存在defaultValue
+            const defaultVal = defaults.defaultValue[level];
+            let index = 0, len = items.length;
+
+            if(typeof items[index] == 'object'){
+                for (; index < len; ++index) {
+                    if (defaultVal == items[index].value) break;
+                }
+            }else{
+                for (; index < len; ++index) {
+                    if (defaultVal == items[index]) break;
+                }
+            }
+            if (index < len) {
+                lineTemp[level] = index;
+            } else {
+                console.warn('Picker has not match defaultValue: ' + defaultVal);
+            }
+        }
+        scrollobjects[level] = $picker.find('.weui-picker__group').eq(level).scroll({
+            items: items,
+            temp: lineTemp[level],//默认选项array
+            onChange: function (item, index) {
+                //为当前的result赋值。
+                if (item) {
+                    result[level] = new Result(item);
+                } else {
+                    result[level] = null;
+                }
+                lineTemp[level] = index;
+
+                if(level<2)//调整年月都要检测
+                {
+                    let year = parseInt(result[0]['value']);
+                    if(result[1])
+                    {
+                        let month = parseInt(result[1]['value']);
+    
+                        let days = [31,28,31,30,31,30,31,30,30,31,30,31];//每月有几天
+                        let daysnum =  days[month-1];
+                        if(month==2)
+                        {
+                            if ( (year % 4 ===0) && (year % 100 !==0 || year % 400 ===0) ) {//闰年有29天
+                                daysnum = 29
+                            }
+                        }
+                        //设置无效日期为disabled
+                        const $dayarea = $picker.find('.weui-picker__group').eq(2);
+                        $dayarea.find('.weui-picker__item').removeClass('weui-picker__item_disabled').show();
+                        for(let _i=daysnum;_i<31;_i++)
+                            $dayarea.find('.weui-picker__item').eq(_i).addClass('weui-picker__item_disabled').hide();
+
+                        if(result[2])
+                        {
+                            let day = parseInt(result[2]['value']);
+                            //调整到合适的位置//虽然不是那个group真实的值，但是如果那个group调整，也不会滑动到disable的值上
+                            if(day>daysnum)
+                            {
+                                let _willindex = daysnum-1;
+                                let pos = 0- ((_willindex-2)*48);
+                                $dayarea.find('.weui-picker__content').css({'transform':'translate3d(0px, '+pos+'px, 0px)'});
+                                result[2] = {label:daysnum+'日',value:daysnum};
+                            }
+                        }
+                    }
+                }
+                if(result.length == depth){
+                    defaults.onChange(result);
+                }
+            },
+            onConfirm: defaults.onConfirm
+        });
+    }
+
+
+    let _depth = depth;
+    while (_depth--) {
+        groups += groupTpl;
+    }
+
+    $picker.find('.weui-picker__bd').html(groups);
+    show();
+    items.forEach((item, index) => {
+        scroll(item, index);
+    });
+    $picker
+        .on('click', '.weui-mask', function () { hide(); })
+        .on('click', '.weui-picker__btn', function () { hide(); })
+        .on('click', '#weui-picker-confirm', function () {
+            defaults.onConfirm(result);
+        });
+    _sington = $picker[0];
+    _sington.hide = hide;
+    return _sington;
+}
+
 
 /**
  * datePicker 时间选择器，由picker拓展而来，提供年、月、日的选择。
@@ -493,5 +668,6 @@ function datePicker(options) {
 
 export default {
     picker,
-    datePicker
+    datePicker,
+    datetimePicker
 };

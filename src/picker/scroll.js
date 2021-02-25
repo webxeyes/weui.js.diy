@@ -140,7 +140,8 @@ $.fn.scroll = function (options) {
 
         // 如果是 disabled 的就跳过
         let index = defaults.offset - translate / defaults.rowHeight;
-        while (!!defaults.items[index] && defaults.items[index].disabled) {
+        //while (!!defaults.items[index] && defaults.items[index].disabled) { //bjmf改动：方便外部控制哪个可选哪个不可选
+        while (!!defaults.items[index] && $this.find('.weui-picker__item').eq(index).attr('class').indexOf('weui-picker__item_disabled')>-1 ){
             diff > 0 ? ++index : --index;
         }
         translate = (defaults.offset - index) * defaults.rowHeight;
@@ -258,4 +259,5 @@ $.fn.scroll = function (options) {
             });
 
     }
+    return this;
 };

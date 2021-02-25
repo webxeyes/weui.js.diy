@@ -25,7 +25,7 @@ import searchBar from './searchBar/searchBar';
 import tab from './tab/tab';
 import form from './form/form';
 import uploader from './uploader/uploader';
-import {picker, datePicker} from './picker/picker';
+import {picker, datePicker,datetimePicker} from './picker/picker';
 import gallery from './gallery/gallery';
 import slider from './slider/slider';
 
@@ -43,6 +43,7 @@ export default {
     uploader,
     picker,
     datePicker,
+    datetimePicker,
     gallery,
     slider
 };

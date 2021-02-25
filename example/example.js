@@ -146,9 +146,9 @@ document.querySelector('#pickerBtn').addEventListener('click', function () {
 
 // 时间选择器
 document.querySelector('#datePickerBtn').addEventListener('click', function () {
-    weui.datePicker({
-        start: '2016-12-29',
-        end: '2030-12-29',
+    weui.datetimePicker({
+        //start: '2016-12-29',
+        //end: '2030-12-29',
         /**
          * https://zh.wikipedia.org/wiki/Cron
          * cron 表达式后三位
@@ -163,12 +163,12 @@ document.querySelector('#datePickerBtn').addEventListener('click', function () {
          *  * * 3                每周三
          */
         cron: '* */2 0',
-        defaultValue: [2017, 7, 9],
+        defaultValue: [2021, 7, 9,12,58,25],
         onChange: function (result) {
-            console.log(result);
+            //console.log(result);
         },
         onConfirm: function (result) {
-            console.log(result);
+            console.log("onConfirm",result);
         },
         id: 'datePicker',
         title: '日期选择器'
@@ -199,8 +199,41 @@ document.querySelector('#multiPickerBtn').addEventListener('click', function () 
             label: 'C',
             value: 'C'
         }
+    ], [
+        {
+            label: 'A',
+            value: 'A'
+        }, {
+            label: 'B',
+            value: 'B'
+        }, {
+            label: 'C',
+            value: 'C'
+        }
+    ], [
+        {
+            label: 'A',
+            value: 'A'
+        }, {
+            label: 'B',
+            value: 'B'
+        }, {
+            label: 'C',
+            value: 'C'
+        }
+    ], [
+        {
+            label: 'A',
+            value: 'A'
+        }, {
+            label: 'B',
+            value: 'B'
+        }, {
+            label: 'C',
+            value: 'C'
+        }
     ], {
-        defaultValue: ['3', 'A'],
+        defaultValue: ['3', 'A','B','C','A'],
         onChange: function (result) {
             console.log(result);
         },
